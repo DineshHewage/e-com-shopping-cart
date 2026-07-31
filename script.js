@@ -72,6 +72,7 @@ function renderProducts() {
     minusBtn.classList.add("qty-btn");
     minusBtn.addEventListener("click", () => {
       if (selectQty > 0) {
+        errorMsg.textContent = "";
         selectQty--;
         qtyDisplay.textContent = selectQty;
       }
