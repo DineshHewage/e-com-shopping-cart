@@ -139,3 +139,61 @@ h2 {
   color: #d42727;
   min-height: 16px; /* reserves space so layout doesn't jump when message appears */
 }
+
+#cart-list {
+  list-style: none;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+  gap: 10px;
+}
+
+.cart-item-desc {
+  flex: 1;
+  font-size: 14px;
+}
+
+.cart-item-detail {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.remove-btn {
+  padding: 4px 10px;
+  background-color: #d42727;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s;
+}
+
+.remove-btn:hover {
+  background-color: #a81e1e;
+}
+
+.cart-empty-msg {
+  color: #888888;
+  font-size: 14px;
+  padding: 10px;
+  text-align: center;
+}
+
+#cart-total {
+  font-weight: 600;
+  text-align: right;
+  padding: 10px;
+  font-size: 16px;
+}

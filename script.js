@@ -1,5 +1,18 @@
 const productLists = document.getElementById("product-list");
+const cartList = document.getElementById("cart-list");
+const cartTotal = document.getElementById("cart-total");
 
+// Load the cart from the loacal
+// If nothing saved yet, start with an empty array.
+let cart;
+try {
+  const store = JSON.parse(localStorage.getItem("cartItem"));
+  cart = Array.isArray(store) ? store : [];
+} catch (error) {
+  cart = [];
+}
+
+// Static product caterlog - defined by the developer and never changers at runtime.
 let products = [
   {
     id: "0001",
@@ -38,33 +51,40 @@ let products = [
   },
 ];
 
+// ─── Render products ────────────────────────────────────────────────────────
 function renderProducts() {
+  productLists.innerHTML = "";
+  // Display products in the products array on the screen.
   products.forEach((product) => {
     let selectQty = 0;
+
+    //[product discription : price] [image] [-] [Number] [+] [Add to cart Btn]
+
     const li = document.createElement("li");
     li.dataset.id = product.id;
 
-    //[product discription : price] [image] [-] [Number] [+] [Add to cart Btn]
+    // product Image
+    const productImg = document.createElement("img");
+    productImg.src = product.Image;
+    productImg.alt = product.description;
+    productImg.classList.add("product-img");
+    productImg.addEventListener("error", () => {
+      productImg.style.display = "none";
+    });
 
     //Product discription & price
     const productsSpan = document.createElement("span");
     productsSpan.textContent = `${product.description} : $${product.price.toFixed(2)}`;
     productsSpan.classList.add("product-info");
 
-    // Image
-    const productImg = document.createElement("img");
-    productImg.src = product.Image;
-    productImg.alt = product.description;
-    productImg.classList.add("product-img");
+    // Error message (Shown when the user tries to exceed stock)
+    const errorMsg = document.createElement("p");
+    errorMsg.textContent = "";
+    errorMsg.classList.add("qty-error");
 
     // Quntity controls wrapper
     const qtyWrapper = document.createElement("div");
     qtyWrapper.classList.add("qty-wrapper");
-
-    // Error message
-    const errorMsg = document.createElement("p");
-    errorMsg.textContent = "";
-    errorMsg.classList.add("qty-error");
 
     // Minus button
     const minusBtn = document.createElement("button");
@@ -72,9 +92,9 @@ function renderProducts() {
     minusBtn.classList.add("qty-btn");
     minusBtn.addEventListener("click", () => {
       if (selectQty > 0) {
-        errorMsg.textContent = "";
         selectQty--;
         qtyDisplay.textContent = selectQty;
+        errorMsg.textContent = "";
       }
     });
 
@@ -90,6 +110,7 @@ function renderProducts() {
 
     plusBtn.addEventListener("click", () => {
       if (selectQty >= product.quantity) {
+        // Cannot exceed available stock
         errorMsg.textContent = `only ${product.quantity} is avilble in the stok`;
       } else {
         selectQty++;
@@ -103,7 +124,7 @@ function renderProducts() {
     addToCartBtn.textContent = "Add to cart";
     addToCartBtn.classList.add("add-to-cart-btn");
     addToCartBtn.addEventListener("click", () => {
-      addProductToCart(product.id);
+      addToCart(product.id, selectQty);
     });
 
     // Assemble quntity controls
@@ -122,6 +143,104 @@ function renderProducts() {
   });
 }
 
-renderProducts();
+// ─── Cart functions ──────────────────────────────────────────────────────────
 
-// addProductToCart();
+function addToCart(id, selectedQty) {
+  // Find the product in products array by id.
+  // Take the discription and price
+  // Take the selected quntity by the user
+  // Create a new Cart item by combining all three
+  // push into cart
+  // Call saveCart() to write cart to localstorage.
+  // Call renderCart() to display items in the cart on the screen.
+
+  // Block adding 0 item - User must select at least 1.
+  if (selectedQty === 0) return;
+
+  // find the selected product from the Products array.
+  const selectedProduct = products.find((p) => p.id === id);
+
+  // check if the selected product is avilable in the Cart
+  const existingItem = cart.find((item) => item.id === id);
+
+  if (existingItem) {
+    //Based on truthy and falsy, if the matching product does not exists in cart, existingItem = falsy.
+    // Alredy exist in the cart and increase the quntity
+    existingItem.quantity += selectedQty;
+  } else {
+    const cartItem = {
+      id: selectedProduct.id,
+      description: selectedProduct.description,
+      price: selectedProduct.price,
+      quantity: selectedQty,
+    };
+
+    cart.push(cartItem);
+    console.log(cart); // {id: '0005', description: 'Cotton short(Size - 34)', price: 9.5, quantity: 3}
+  }
+
+  saveCart();
+  renderCart();
+}
+
+function saveCart() {
+  try {
+    // Save cart items in local-storage.
+    localStorage.setItem("cartItem", JSON.stringify(cart));
+  } catch {
+    console.error("Could not save Cart to localstorage");
+  }
+}
+
+function renderCart() {
+  // Load items in cart to the screen
+  // cartList.innerHTML = "";
+
+  if (cart.length === 0) {
+    const emptyMsg = document.createElement("p");
+    emptyMsg.textContent = "Your cart is empty";
+    emptyMsg.classList.add("cart-empty-msg");
+    cartList.appendChild(emptyMsg);
+    cartTotal.textContent = "Total: $0.00";
+    return;
+  }
+
+  cart.forEach((item) => {
+    const li = document.createElement("li");
+    li.classList.add("cart-item");
+    li.dataset.id = item.id;
+
+    // [image] [product discription] [price:${price}] [Qty:${quntity}] [Remove button]
+
+    // Item discription.
+    const cartDiscription = document.createElement("span");
+    cartDiscription.textContent = item.description;
+    cartDiscription.classList.add("cart-item-desc");
+
+    // Item quantity and price
+    const cartQtyPrice = document.createElement("span");
+    cartQtyPrice.textContent = `Qty : ${item.quantity} Price : $${(item.price * item.quantity).toFixed(2)}`;
+    cartQtyPrice.classList.add("cart-item-detail");
+
+    // Remove button
+    const removeBtn = document.createElement("button");
+    removeBtn.textContent = "Remove";
+    removeBtn.classList.add("remove-btn");
+    removeBtn.addEventListener("click", () => {
+      removeFromCart(item.id);
+    });
+
+    li.appendChild(cartDiscription);
+    li.appendChild(cartQtyPrice);
+    li.appendChild(removeBtn);
+    cartList.appendChild(li);
+  });
+
+  function removeFromCart(id) {
+    cart = cart.filter((element) => element.id !== id);
+  }
+}
+
+// ─── Initialise ─────────────────────────────────────────────────────────────
+renderProducts();
+renderCart();
