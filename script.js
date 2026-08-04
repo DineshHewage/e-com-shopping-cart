@@ -1,9 +1,8 @@
-const productLists = document.getElementById("product-list");
-const cartList = document.getElementById("cart-list");
-const cartTotal = document.getElementById("cart-total");
+const productListEl = document.getElementById("product-list");
+const cartListEl = document.getElementById("cart-list");
+const cartTotalEl = document.getElementById("cart-total");
 
-// Load the cart from the loacal
-// If nothing saved yet, start with an empty array.
+// Load the cart from the loacalStorage - always guaranteed to be an array.
 let cart;
 try {
   const store = JSON.parse(localStorage.getItem("cartItem"));
@@ -13,7 +12,7 @@ try {
 }
 
 // Static product caterlog - defined by the developer and never changers at runtime.
-let products = [
+const products = [
   {
     id: "0001",
     description: "Polo Dry fit T-shirt(Size - S)",
@@ -53,15 +52,15 @@ let products = [
 
 // ─── Render products ────────────────────────────────────────────────────────
 function renderProducts() {
-  productLists.innerHTML = "";
+  productListEl.innerHTML = "";
+
   // Display products in the products array on the screen.
   products.forEach((product) => {
-    let selectQty = 0;
-
-    //[product discription : price] [image] [-] [Number] [+] [Add to cart Btn]
+    // [image] [product discription : price] [-] [Number] [+] [Add to cart Btn]
 
     const li = document.createElement("li");
     li.dataset.id = product.id;
+    li.dataset.selectQty = 0; // store selectQty on the element so event delegation can read it
 
     // product Image
     const productImg = document.createElement("img");
@@ -79,8 +78,12 @@ function renderProducts() {
 
     // Error message (Shown when the user tries to exceed stock)
     const errorMsg = document.createElement("p");
-    errorMsg.textContent = "";
     errorMsg.classList.add("qty-error");
+
+    // Quantity display
+    const qtyDisplay = document.createElement("span");
+    qtyDisplay.textContent = 0;
+    qtyDisplay.classList.add("qty-display");
 
     // Quntity controls wrapper
     const qtyWrapper = document.createElement("div");
@@ -91,6 +94,7 @@ function renderProducts() {
     minusBtn.textContent = "-";
     minusBtn.classList.add("qty-btn");
     minusBtn.addEventListener("click", () => {
+      let selectQty = Number(li.dataset.selectQty);
       if (selectQty > 0) {
         selectQty--;
         qtyDisplay.textContent = selectQty;
@@ -98,22 +102,19 @@ function renderProducts() {
       }
     });
 
-    // Quantity display
-    const qtyDisplay = document.createElement("span");
-    qtyDisplay.textContent = 0;
-    qtyDisplay.classList.add("qty-display");
-
     // Plus button
     const plusBtn = document.createElement("button");
     plusBtn.textContent = "+";
-    plusBtn.classList.add("qty-btn");
+    plusBtn.classList.add("qty-btn", "plus-btn");
 
     plusBtn.addEventListener("click", () => {
+      let selectQty = Number(li.dataset.selectQty);
       if (selectQty >= product.quantity) {
-        // Cannot exceed available stock
+        // control point and Cannot exceed available stock
         errorMsg.textContent = `only ${product.quantity} is avilble in the stok`;
       } else {
         selectQty++;
+        li.dataset.selectQty = selectQty;
         qtyDisplay.textContent = selectQty;
         errorMsg.textContent = ""; // clear error on valid increment
       }
@@ -123,9 +124,6 @@ function renderProducts() {
     const addToCartBtn = document.createElement("button");
     addToCartBtn.textContent = "Add to cart";
     addToCartBtn.classList.add("add-to-cart-btn");
-    addToCartBtn.addEventListener("click", () => {
-      addToCart(product.id, selectQty);
-    });
 
     // Assemble quntity controls
     qtyWrapper.appendChild(minusBtn);
@@ -139,13 +137,26 @@ function renderProducts() {
     li.appendChild(errorMsg);
     li.appendChild(addToCartBtn);
 
-    productLists.appendChild(li);
+    // Display
+    productListEl.appendChild(li);
   });
 }
 
-// ─── Cart functions ──────────────────────────────────────────────────────────
+// ─── Event delegation for product list ───────────────────────────────────────
+// One listner on the <ui> handles all "Add to cart" clicks.
+productListEl.addEventListener("click", (e) => 
 
+  if (!e.target.classList("add-to-cart-btn")) return
+
+  // console.log(e.target.tagName);
+  // if (e.target.tagName === "Button") {
+  //   console.log(e.target.tagName);
+  // }
+});
+
+// ─── Cart functions ──────────────────────────────────────────────────────────
 function addToCart(id, selectedQty) {
+  // Not to accept o for number of items.
   // Find the product in products array by id.
   // Take the discription and price
   // Take the selected quntity by the user
@@ -200,8 +211,8 @@ function renderCart() {
     const emptyMsg = document.createElement("p");
     emptyMsg.textContent = "Your cart is empty";
     emptyMsg.classList.add("cart-empty-msg");
-    cartList.appendChild(emptyMsg);
-    cartTotal.textContent = "Total: $0.00";
+    cartListEl.appendChild(emptyMsg);
+    cartTotalEl.textContent = "Total: $0.00";
     return;
   }
 
@@ -233,11 +244,13 @@ function renderCart() {
     li.appendChild(cartDiscription);
     li.appendChild(cartQtyPrice);
     li.appendChild(removeBtn);
-    cartList.appendChild(li);
+    cartListEl.appendChild(li);
   });
 
   function removeFromCart(id) {
     cart = cart.filter((element) => element.id !== id);
+    saveCart();
+    renderCart();
   }
 }
 
