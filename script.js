@@ -59,7 +59,7 @@ function renderProducts() {
     // [image] [product discription : price] [-] [Number] [+] [Add to cart Btn]
 
     const li = document.createElement("li");
-    li.dataset.id = product.id;
+    li.dataset.id = product.id; // Like varibles, don't have to define id and selectQty.
     li.dataset.selectQty = 0; // store selectQty on the element so event delegation can read it
 
     // product Image
@@ -144,14 +144,18 @@ function renderProducts() {
 
 // ─── Event delegation for product list ───────────────────────────────────────
 // One listner on the <ui> handles all "Add to cart" clicks.
-productListEl.addEventListener("click", (e) => 
+productListEl.addEventListener("click", (e) => {
+  if (!e.target.classList.contains("add-to-cart-btn")) return;
 
-  if (!e.target.classList("add-to-cart-btn")) return
+  // Wlak up to the parent <li> to get the product id
+  const li = e.target.closest("li");
+  // console.log(li);
+  // console.log(li.dataset.id);
+  // console.log(li.dataset.selectQty);
 
-  // console.log(e.target.tagName);
-  // if (e.target.tagName === "Button") {
-  //   console.log(e.target.tagName);
-  // }
+  const seletedId = li.dataset.id;
+  const seletedQty = Number(li.dataset.selectQty);
+  addToCart(seletedId, seletedQty);
 });
 
 // ─── Cart functions ──────────────────────────────────────────────────────────
@@ -187,7 +191,7 @@ function addToCart(id, selectedQty) {
     };
 
     cart.push(cartItem);
-    console.log(cart); // {id: '0005', description: 'Cotton short(Size - 34)', price: 9.5, quantity: 3}
+    //console.log(cart); // {id: '0005', description: 'Cotton short(Size - 34)', price: 9.5, quantity: 3}
   }
 
   saveCart();
@@ -205,7 +209,7 @@ function saveCart() {
 
 function renderCart() {
   // Load items in cart to the screen
-  // cartList.innerHTML = "";
+  cartListEl.innerHTML = "";
 
   if (cart.length === 0) {
     const emptyMsg = document.createElement("p");
