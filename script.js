@@ -97,6 +97,7 @@ function renderProducts() {
       let selectQty = Number(li.dataset.selectQty);
       if (selectQty > 0) {
         selectQty--;
+        li.dataset.selectQty = selectQty;
         qtyDisplay.textContent = selectQty;
         errorMsg.textContent = "";
       }
@@ -251,11 +252,23 @@ function renderCart() {
     cartListEl.appendChild(li);
   });
 
-  function removeFromCart(id) {
-    cart = cart.filter((element) => element.id !== id);
-    saveCart();
-    renderCart();
-  }
+  calculateTotal();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter((element) => element.id !== id);
+  console.log(cart);
+
+  saveCart();
+  renderCart();
+}
+
+function calculateTotal() {
+  let total = 0;
+  cart.forEach((p) => {
+    total += p.price * p.quantity;
+  });
+  cartTotalEl.textContent = `The total : $${total.toFixed(2)}`;
 }
 
 // ─── Initialise ─────────────────────────────────────────────────────────────
